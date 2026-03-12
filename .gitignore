@@ -7,3 +7,4 @@ backup/
 data/
 # 纯净版：不纳入对话/运行过程中生成的数据
 memory/
+.DS_Store
