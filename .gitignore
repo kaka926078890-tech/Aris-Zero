@@ -1,0 +1,9 @@
+node_modules
+.env
+dist
+backup/
+*.restore_backup
+*.backup
+data/
+# 纯净版：不纳入对话/运行过程中生成的数据
+memory/

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.tailwindcss.com; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com;" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>人设与规则 - Aris</title>
+  <style>
+    .no-drag { -webkit-app-region: no-drag; }
+    .tab-active { border-color: rgba(34, 211, 238, 0.6); color: rgb(34, 211, 238); background: rgba(6, 182, 212, 0.12); }
+    .tab-inactive { border-color: rgba(71, 85, 105, 0.5); color: rgb(148, 163, 184); }
+    .panel-hidden { display: none; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-200 flex flex-col h-screen overflow-hidden">
+  <header class="flex-shrink-0 flex items-center gap-3 border-b border-cyan-500/30 px-4 py-2 no-drag">
+    <h1 class="text-lg font-medium text-cyan-200">人设与规则</h1>
+    <div class="flex gap-1">
+      <button id="tabPersona" type="button" class="tab-active px-3 py-1.5 text-sm rounded border">人设 (persona.md)</button>
+      <button id="tabRules" type="button" class="tab-inactive px-3 py-1.5 text-sm rounded border">行为规则 (rules.md)</button>
+    </div>
+  </header>
+  <main class="flex-1 min-h-0 flex flex-col overflow-hidden px-4 py-3 no-drag">
+    <div id="panelPersona" class="flex-1 min-h-0 flex flex-col gap-2">
+      <p class="text-xs text-slate-400">定义 Aris 是谁、人格与回复风格，会注入到每轮对话的系统提示中。保存后立即生效，无需重启。</p>
+      <textarea id="personaText" class="flex-1 min-h-0 w-full bg-black/40 text-cyan-100 border border-cyan-500/40 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-400 resize-none font-mono" placeholder="人设内容…" spellcheck="false"></textarea>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button id="savePersona" type="button" class="px-4 py-2 text-sm rounded border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/20 focus:outline-none focus:ring-1 focus:ring-cyan-400">保存人设</button>
+        <span id="personaStatus" class="text-xs text-slate-500"></span>
+      </div>
+    </div>
+    <div id="panelRules" class="panel-hidden flex-1 min-h-0 flex flex-col gap-2">
+      <p class="text-xs text-slate-400">行为规则：工具使用、记忆与身份、时间与连续性等约束。保存后立即生效。</p>
+      <textarea id="rulesText" class="flex-1 min-h-0 w-full bg-black/40 text-cyan-100 border border-cyan-500/40 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-400 resize-none font-mono" placeholder="规则内容…" spellcheck="false"></textarea>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button id="saveRules" type="button" class="px-4 py-2 text-sm rounded border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/20 focus:outline-none focus:ring-1 focus:ring-cyan-400">保存规则</button>
+        <span id="rulesStatus" class="text-xs text-slate-500"></span>
+      </div>
+    </div>
+  </main>
+  <script>
+    const tabPersona = document.getElementById('tabPersona');
+    const tabRules = document.getElementById('tabRules');
+    const panelPersona = document.getElementById('panelPersona');
+    const panelRules = document.getElementById('panelRules');
+    const personaText = document.getElementById('personaText');
+    const rulesText = document.getElementById('rulesText');
+    const savePersona = document.getElementById('savePersona');
+    const saveRules = document.getElementById('saveRules');
+    const personaStatus = document.getElementById('personaStatus');
+    const rulesStatus = document.getElementById('rulesStatus');
+
+    function showPanel(which) {
+      const isPersona = which === 'persona';
+      panelPersona.classList.toggle('panel-hidden', !isPersona);
+      panelRules.classList.toggle('panel-hidden', isPersona);
+      tabPersona.classList.toggle('tab-active', isPersona);
+      tabPersona.classList.toggle('tab-inactive', !isPersona);
+      tabRules.classList.toggle('tab-active', !isPersona);
+      tabRules.classList.toggle('tab-inactive', isPersona);
+    }
+
+    tabPersona.addEventListener('click', () => showPanel('persona'));
+    tabRules.addEventListener('click', () => showPanel('rules'));
+
+    async function load() {
+      try {
+        personaText.value = await window.configApi.readPersona() || '';
+        rulesText.value = await window.configApi.readRules() || '';
+      } catch (e) {
+        personaStatus.textContent = '加载失败：' + (e.message || '未知错误');
+      }
+    }
+
+    function setStatus(el, msg, isError) {
+      el.textContent = msg;
+      el.className = 'text-xs ' + (isError ? 'text-red-400' : 'text-slate-500');
+      if (msg) setTimeout(() => { el.textContent = ''; }, 3000);
+    }
+
+    savePersona.addEventListener('click', async () => {
+      try {
+        await window.configApi.writePersona(personaText.value);
+        setStatus(personaStatus, '已保存，后续对话将使用新人设');
+      } catch (e) {
+        setStatus(personaStatus, e.message || '保存失败', true);
+      }
+    });
+
+    saveRules.addEventListener('click', async () => {
+      try {
+        await window.configApi.writeRules(rulesText.value);
+        setStatus(rulesStatus, '已保存，后续对话将使用新规则');
+      } catch (e) {
+        setStatus(rulesStatus, e.message || '保存失败', true);
+      }
+    });
+
+    load();
+  </script>
+</body>
+</html>
