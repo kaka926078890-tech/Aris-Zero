@@ -21,4 +21,10 @@ contextBridge.exposeInMainWorld('aris', {
   onProactive: (callback) => {
     ipcRenderer.on('aris:proactive', (_, msg) => callback(msg));
   },
+  openHistory: () => ipcRenderer.send('app:openHistory'),
+  openMemory: () => ipcRenderer.send('app:openMemory'),
+  openConfig: () => ipcRenderer.send('app:openConfig'),
+  openPrompt: () => ipcRenderer.send('app:openPrompt'),
+  exportMemory: () => ipcRenderer.send('app:exportMemory'),
+  importMemory: () => ipcRenderer.send('app:importMemory'),
 });

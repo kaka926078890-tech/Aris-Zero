@@ -295,6 +295,43 @@ ipcMain.on('set-ignore-mouse-events', (_, ignore, options) => {
   }
 });
 
+ipcMain.on('app:openHistory', () => { if (mainWindow && !mainWindow.isDestroyed()) openHistoryWindow(); });
+ipcMain.on('app:openMemory', () => { if (mainWindow && !mainWindow.isDestroyed()) openMemoryWindow(); });
+ipcMain.on('app:openConfig', () => { if (mainWindow && !mainWindow.isDestroyed()) openConfigWindow(); });
+ipcMain.on('app:openPrompt', () => { if (mainWindow && !mainWindow.isDestroyed()) openPromptWindow(); });
+ipcMain.on('app:exportMemory', async () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  const { filePath } = await dialog.showSaveDialog(mainWindow, {
+    title: '导出记忆',
+    defaultPath: `aris-backup-${new Date().toISOString().slice(0, 10)}.aris`,
+    filters: [{ name: 'Aris 备份', extensions: ['aris'] }],
+  });
+  if (filePath) {
+    try {
+      const { memoryCount } = await exportToFile(filePath);
+      dialog.showMessageBox(mainWindow, { type: 'info', title: '导出成功', message: `已导出到 ${filePath}${memoryCount != null ? `，向量记忆 ${memoryCount} 条` : ''}` });
+    } catch (e) {
+      dialog.showErrorBox('导出失败', e.message);
+    }
+  }
+});
+ipcMain.on('app:importMemory', async () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  const { filePaths } = await dialog.showOpenDialog(mainWindow, {
+    title: '选择备份文件',
+    properties: ['openFile'],
+    filters: [{ name: 'Aris 备份', extensions: ['aris'] }],
+  });
+  if (filePaths && filePaths[0]) {
+    try {
+      await importFromFile(filePaths[0]);
+      dialog.showMessageBox(mainWindow, { type: 'info', title: '导入成功', message: '记忆与对话已恢复。若有对话未刷新，可重启应用。' });
+    } catch (e) {
+      dialog.showErrorBox('导入失败', e.message);
+    }
+  }
+});
+
 ipcMain.handle('get-window-title', () => getActiveWindowTitle());
 
 ipcMain.handle('dialogue:send', async (event, userContent) => {

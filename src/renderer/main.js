@@ -433,3 +433,28 @@ if (container) {
     });
   }
 }
+
+const appMenuBtn = document.getElementById('app-menu-btn');
+const appMenuDropdown = document.getElementById('app-menu-dropdown');
+if (appMenuBtn && appMenuDropdown && typeof window.aris !== 'undefined') {
+  appMenuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    appMenuDropdown.classList.toggle('hidden');
+  });
+  appMenuDropdown.querySelectorAll('.app-menu-item').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const action = el.getAttribute('data-action');
+      if (action === 'history') window.aris.openHistory();
+      else if (action === 'memory') window.aris.openMemory();
+      else if (action === 'config') window.aris.openConfig();
+      else if (action === 'prompt') window.aris.openPrompt();
+      else if (action === 'exportMemory') window.aris.exportMemory();
+      else if (action === 'importMemory') window.aris.importMemory();
+      appMenuDropdown.classList.add('hidden');
+    });
+  });
+  document.addEventListener('click', () => {
+    appMenuDropdown.classList.add('hidden');
+  });
+}
